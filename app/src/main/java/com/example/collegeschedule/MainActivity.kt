@@ -13,16 +13,17 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import com.example.collegeschedule.data.network.RetrofitInstance
+import com.example.collegeschedule.data.repository.ScheduleRepository
+import com.example.collegeschedule.ui.schedule.ScheduleScreen
 import com.example.collegeschedule.ui.theme.CollegeScheduleTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,31 +38,27 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@PreviewScreenSizes
 @Composable
 fun CollegeScheduleApp() {
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+    var currentDestination by rememberSaveable {
+        mutableStateOf(AppDestinations.HOME)
+    }
 
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
-            AppDestinations.entries.forEach {
-                item(
-                    icon = {
-                        Icon(
-                            it.icon,
-                            contentDescription = it.label
-                        )
-                    },
-                    label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it }
-                )
-            }
-        }
-    ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Greeting(
-                name = "Android",
+    val repository = remember { ScheduleRepository(RetrofitInstance.api) }
+
+    // Простая навигация без NavigationSuiteScaffold
+    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        when (currentDestination) {
+            AppDestinations.HOME -> ScheduleScreen(
+                repository = repository,
+                modifier = Modifier.padding(innerPadding)
+            )
+            AppDestinations.FAVORITES -> Text(
+                "Избранные группы",
+                modifier = Modifier.padding(innerPadding)
+            )
+            AppDestinations.PROFILE -> Text(
+                "Профиль студента",
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -74,21 +71,5 @@ enum class AppDestinations(
 ) {
     HOME("Home", Icons.Default.Home),
     FAVORITES("Favorites", Icons.Default.Favorite),
-    PROFILE("Profile", Icons.Default.AccountBox),
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    CollegeScheduleTheme {
-        Greeting("Android")
-    }
+    PROFILE("Profile", Icons.Default.AccountBox)
 }
